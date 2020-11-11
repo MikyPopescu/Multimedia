@@ -1,0 +1,360 @@
+create or replace TYPE        ORDImage
+                                                                             authid current_user
+  AS OBJECT
+(
+  -------------------
+  -- TYPE ATTRIBUTES
+  -------------------
+  -- source
+  --   Image source (ORDSource)
+  -- height
+  --   Height of the image in pixels
+  -- width
+  --   Width of image in pixels
+  -- contentLength
+  --   Size of the on-disk image in bytes
+  -- fileFormat
+  --   File type of image (e.g., TIFF, JFIF)
+  -- contentFormat
+  --   Type of image (e.g., monochrome, 8-bit Grayscale)
+  -- compressionFormat
+  --   Compression used in image
+  -- mimeType
+  --   Mime type of the image
+
+  source              ORDSource,
+  height              INTEGER,
+  width               INTEGER,
+  contentLength       INTEGER,
+  fileFormat          VARCHAR2(4000),
+  contentFormat       VARCHAR2(4000),
+  compressionFormat   VARCHAR2(4000),
+  mimeType            VARCHAR2(4000),
+--
+---------------------
+-- METHOD DECLARATION
+---------------------
+--
+  -- USER-DEFINED CONSTRUCTORS
+--
+-- Description:  Construct an ORDImage object from a BLOB
+-- Parameters:
+--   data:      BLOB
+--   setProperties: integer of value 0 or 1, determines if setProperties
+--                  method is called in the constructor.
+--
+  CONSTRUCTOR FUNCTION ORDImage(SELF IN OUT NOCOPY ORDSYS.ORDImage,
+    data             IN BLOB,
+    setProperties IN INTEGER DEFAULT 0
+  ) RETURN SELF AS RESULT,
+--
+--
+-- Description: Construct an ORDImage object from a specified source.
+-- By default, an empty local ORDImage object is created.
+-- Parameters:
+--   source_type: the type of the source.
+--                Allowed value: LOCAL(default), FILE, HTTP
+--   source_location: the location of the source.
+--   source_name: the name of the source.
+--   setProperties: integer of value 0 or 1, determines if setProperties
+--                  method is called in the constructor.
+--
+  CONSTRUCTOR FUNCTION ORDImage(SELF IN OUT NOCOPY ORDSYS.ORDImage,
+    source_type       IN VARCHAR2 DEFAULT 'LOCAL',
+    source_location   IN VARCHAR2 DEFAULT NULL,
+    source_name       IN VARCHAR2 DEFAULT NULL,
+    setProperties  IN INTEGER DEFAULT 0
+  ) RETURN SELF AS RESULT,
+  --
+  -- OLD CONSTRUCTORS
+  STATIC FUNCTION init RETURN ORDImage,
+  STATIC FUNCTION init( srcType IN VARCHAR2,
+            srcLocation IN VARCHAR2,
+            srcName IN VARCHAR2 ) RETURN ORDImage,
+--
+  -- IMAGE COPY METHOD
+  MEMBER PROCEDURE copy(SELF IN OUT NOCOPY ORDImage,
+                        dest IN OUT NOCOPY ORDImage),
+--
+  -- IMAGE PROCESSING RELATED METHODS
+  MEMBER PROCEDURE process(SELF    IN OUT NOCOPY ORDImage,
+                           command IN            VARCHAR2),
+  MEMBER PROCEDURE processCopy(SELF    IN OUT NOCOPY ORDImage,
+                               command IN            VARCHAR2,
+                               dest    IN OUT NOCOPY ORDImage),
+--
+  -- ADD WATERMARK
+  MEMBER PROCEDURE applyWatermark(SELF    IN OUT NOCOPY ORDSYS.ORDImage,
+                               added_text IN    VARCHAR2,
+                               dest    IN OUT NOCOPY ORDSYS.ORDImage,
+                               logging OUT VARCHAR2,
+                               watermark_properties IN ORDSYS.ORD_STR_LIST default null),
+
+  MEMBER PROCEDURE applyWatermark(SELF     IN OUT NOCOPY ORDSYS.ORDImage,
+                               added_image IN OUT NOCOPY ORDSYS.ORDImage,
+                               dest    IN OUT NOCOPY ORDSYS.ORDImage,
+                               logging OUT VARCHAR2,
+                               watermark_properties IN ORDSYS.ORD_STR_LIST default null),
+
+--
+  -- IMAGE PROPERTY SET AND CHECK METHODS
+  MEMBER PROCEDURE setProperties(SELF IN OUT NOCOPY ORDImage),
+  MEMBER PROCEDURE setProperties(SELF IN OUT NOCOPY ORDImage,
+                                 description IN VARCHAR2),
+  MEMBER FUNCTION checkProperties RETURN BOOLEAN,
+--
+  -- IMAGE ATTRIBUTE ACCESSOR METHODS
+  MEMBER FUNCTION getHeight RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getHeight, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION getWidth RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getWidth, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION getFileFormat RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getFileFormat, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION getContentFormat RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getContentFormat, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION getCompressionFormat RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getCompressionFormat, WNDS, WNPS, RNDS, RNPS),
+--
+  -- METADATA RELATED METHODS
+  MEMBER FUNCTION getMetadata(SELF          IN ORDImage,
+                              metadataType  IN VARCHAR2 DEFAULT 'ALL')
+  RETURN SYS.XMLSEQUENCETYPE,
+--
+  MEMBER PROCEDURE putMetadata(SELF         IN OUT NOCOPY ORDImage,
+                               xmlData      IN SYS.XMLType,
+                               metadataType IN VARCHAR2 DEFAULT 'XMP',
+                               encoding     IN VARCHAR2 DEFAULT 'UTF-8'),
+--
+  -- LOCAL RELATED METHODS
+  MEMBER PROCEDURE setLocal(SELF IN OUT NOCOPY ORDImage),
+  MEMBER PROCEDURE clearLocal(SELF IN OUT NOCOPY ORDImage),
+  MEMBER FUNCTION  isLocal RETURN BOOLEAN,
+  PRAGMA RESTRICT_REFERENCES(isLocal, WNDS, WNPS, RNDS, RNPS),
+  --
+  -- DATE RELATED METHODS
+  MEMBER FUNCTION  getUpdateTime RETURN DATE,
+  PRAGMA RESTRICT_REFERENCES(getUpdateTime, WNDS, WNPS, RNDS, RNPS),
+  MEMBER PROCEDURE setUpdateTime(SELF         IN OUT NOCOPY ORDImage,
+                                 current_time               DATE),
+--
+  -- MIMETYPE RELATED METHODS
+  MEMBER FUNCTION  getMimeType RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getMimeType, WNDS, WNPS, RNDS, RNPS),
+  MEMBER PROCEDURE setMimeType(SELF IN OUT NOCOPY ORDImage,
+                               mime IN            VARCHAR2),
+--
+  -- SOURCE/CONTENT RELATED METHODS
+  MEMBER FUNCTION  getContentLength RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getContentLength, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION  getContent RETURN BLOB,
+  PRAGMA RESTRICT_REFERENCES(getContent, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION getBFILE RETURN BFILE,
+  PRAGMA RESTRICT_REFERENCES(getBFILE, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER PROCEDURE deleteContent(SELF IN OUT NOCOPY ORDImage),
+--
+  MEMBER FUNCTION getDicomMetadata(SELF IN ORDImage,
+                                    optionString  IN VARCHAR2) RETURN XMLType,
+--
+  MEMBER PROCEDURE setSource(SELF IN OUT NOCOPY ORDImage,
+                             source_type     IN VARCHAR2,
+                             source_location IN VARCHAR2,
+                             source_name     IN VARCHAR2),
+  MEMBER FUNCTION  getSource RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getSource, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION  getSourceType RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getSourceType, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION  getSourceLocation RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getSourceLocation, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER FUNCTION  getSourceName RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getSourceName, WNDS, WNPS, RNDS, RNPS),
+--
+  MEMBER PROCEDURE import(SELF IN OUT NOCOPY ORDImage,
+                          ctx IN OUT RAW),
+  MEMBER PROCEDURE importFrom(
+                          SELF IN OUT NOCOPY     ORDImage,
+                          ctx             IN OUT RAW,
+                          source_type     IN     VARCHAR2,
+                          source_location IN     VARCHAR2,
+                          source_name     IN     VARCHAR2),
+  MEMBER PROCEDURE export(
+                          SELF IN OUT NOCOPY     ORDImage,
+                          ctx             IN OUT RAW,
+                          source_type     IN     VARCHAR2,
+                          source_location IN     VARCHAR2,
+                          source_name     IN     VARCHAR2),
+  --
+  MEMBER FUNCTION  processSourceCommand(
+                            SELF      IN OUT NOCOPY ORDImage,
+                            ctx       IN OUT RAW,
+                            cmd       IN VARCHAR2,
+                            arguments IN VARCHAR2,
+                            result    OUT RAW)
+                   RETURN RAW,
+  -- FILE OPERATIONS on the source
+  MEMBER FUNCTION openSource(SELF IN OUT NOCOPY ORDImage,
+                             userArg IN RAW,
+                             ctx  OUT RAW) RETURN INTEGER,
+  --
+  MEMBER FUNCTION closeSource(SELF IN OUT NOCOPY ORDImage, ctx IN OUT RAW)
+  RETURN INTEGER,
+  --
+  MEMBER FUNCTION trimSource(SELF IN OUT NOCOPY ORDImage, ctx IN OUT RAW,
+                             newlen IN INTEGER) RETURN INTEGER,
+  --
+  MEMBER PROCEDURE readFromSource(SELF IN OUT NOCOPY ORDImage,
+                                  ctx IN OUT RAW,
+                                  startPos IN INTEGER,
+                                  numBytes IN OUT INTEGER,
+                                  buffer OUT RAW),
+  --
+  MEMBER PROCEDURE writeToSource(SELF IN OUT NOCOPY ORDImage,
+                                 ctx IN OUT RAW,
+                                 startPos IN INTEGER,
+                                 numBytes IN OUT INTEGER,
+                                 buffer IN RAW),
+  --
+  -- Static Methods for the relational functional interface
+  STATIC PROCEDURE export(ctx             IN OUT RAW,
+                          local_data      IN BLOB,
+                          source_type     IN VARCHAR2,
+                          source_location IN VARCHAR2,
+                          source_name     IN VARCHAR2),
+  --
+  STATIC PROCEDURE importFrom(ctx             IN OUT RAW,
+                              local_data      IN OUT NOCOPY BLOB,
+                              source_type     IN VARCHAR2,
+                              source_location IN VARCHAR2,
+                              source_name     IN VARCHAR2),
+  --
+  STATIC PROCEDURE importFrom(ctx             IN OUT RAW,
+                              local_data      IN OUT NOCOPY BLOB,
+                              source_type     IN VARCHAR2,
+                              source_location IN VARCHAR2,
+                              source_name     IN VARCHAR2,
+                              format          OUT VARCHAR2,
+                              mime_type       OUT VARCHAR2),
+  --
+  STATIC PROCEDURE getProperties(imageBlob         IN BLOB,
+                                 attributes        IN OUT NOCOPY CLOB,
+                                 mimeType          OUT VARCHAR2,
+                                 width             OUT INTEGER,
+                                 height            OUT INTEGER,
+                                 fileFormat        IN OUT VARCHAR2,
+                                 contentFormat     OUT VARCHAR2,
+                                 compressionFormat OUT VARCHAR2,
+                                 contentLength     OUT INTEGER),
+  --
+  STATIC PROCEDURE getProperties(imageBlob         IN BLOB,
+                                 attributes        IN OUT NOCOPY CLOB),
+  --
+  STATIC PROCEDURE getProperties(imageBfile       IN OUT NOCOPY BFILE,
+                                 attributes        IN OUT NOCOPY CLOB,
+                                 mimeType          OUT VARCHAR2,
+                                 width             OUT INTEGER,
+                                 height            OUT INTEGER,
+                                 fileFormat        IN OUT VARCHAR2,
+                                 contentFormat     OUT VARCHAR2,
+                                 compressionFormat OUT VARCHAR2,
+                                 contentLength     OUT INTEGER),
+  --
+  STATIC PROCEDURE getProperties(imageBfile       IN OUT NOCOPY BFILE,
+                                 attributes        IN OUT NOCOPY CLOB),
+  --
+  STATIC FUNCTION getMetadata(imageBlob    IN BLOB,
+                              metadataType IN VARCHAR2 DEFAULT 'ALL')
+                  RETURN SYS.XMLSEQUENCETYPE,
+  --
+  STATIC FUNCTION getMetadata(imageBfile   IN BFILE,
+                              metadataType IN VARCHAR2 DEFAULT 'ALL')
+                  RETURN SYS.XMLSEQUENCETYPE,
+  --
+  STATIC PROCEDURE putMetadata(imageBlob    IN BLOB,
+                               dest         IN OUT NOCOPY BLOB,
+                               xmlData      IN SYS.XMLType,
+                               metadataType IN VARCHAR2 DEFAULT 'XMP',
+                               encoding     IN VARCHAR2 DEFAULT 'UTF-8'),
+  --
+  STATIC PROCEDURE putMetadata(imageBfile   IN BFILE,
+                               dest         IN OUT NOCOPY BLOB,
+                               xmlData      IN SYS.XMLType,
+                               metadataType IN VARCHAR2 DEFAULT 'XMP',
+                               encoding     IN VARCHAR2 DEFAULT 'UTF-8'),
+  --
+  STATIC PROCEDURE process(imageBlob IN OUT NOCOPY BLOB,
+                           command IN VARCHAR2),
+  --
+  STATIC PROCEDURE processCopy(imageBlob IN BLOB,
+                               command IN     VARCHAR2,
+                               dest    IN OUT NOCOPY BLOB),
+  --
+  STATIC PROCEDURE processCopy(imageBfile IN OUT BFILE,
+                               command IN     VARCHAR2,
+                               dest    IN OUT NOCOPY BLOB),
+  --
+  STATIC PROCEDURE process(imageBlob     IN OUT NOCOPY BLOB,
+                           command       IN VARCHAR2,
+                           width         IN INTEGER,
+                           height        IN INTEGER,
+                           fileFormat    IN VARCHAR2,
+                           contentFormat IN VARCHAR2,
+                           compressionFormat IN VARCHAR2),
+  --
+  STATIC PROCEDURE processCopy(imageBlob IN BLOB,
+                               command       IN VARCHAR2,
+                               dest          IN OUT NOCOPY BLOB,
+                               width         IN INTEGER,
+                               height        IN INTEGER,
+                               fileFormat    IN VARCHAR2,
+                               contentFormat IN VARCHAR2,
+                               compressionFormat IN VARCHAR2),
+  --
+  STATIC PROCEDURE processCopy(imageBfile    IN OUT NOCOPY BFILE,
+                               command       IN VARCHAR2,
+                               dest          IN OUT NOCOPY BLOB,
+                               width         IN INTEGER,
+                               height        IN INTEGER,
+                               fileFormat    IN VARCHAR2,
+                               contentFormat IN VARCHAR2,
+                               compressionFormat IN VARCHAR2),
+  --
+  STATIC FUNCTION getDicomMetadata(imageBlob      IN BLOB,
+                                   optionString IN VARCHAR2) RETURN XMLType,
+  --
+  STATIC FUNCTION getDicomMetadata(imageBfile     IN BFILE,
+                                   optionString IN VARCHAR2) RETURN XMLType,
+  --
+  STATIC PROCEDURE applyWatermark(imageBlob     IN BLOB,
+                               added_text       IN VARCHAR2,
+                               dest          IN OUT NOCOPY BLOB,
+                               logging OUT VARCHAR2,
+                               watermark_properties IN ordsys.ord_str_list default null),
+
+  STATIC PROCEDURE applyWatermark(imageBlob     IN BLOB,
+                               added_image      IN BLOB,
+                               dest          IN OUT NOCOPY BLOB,
+                               logging OUT VARCHAR2,
+                               watermark_properties IN ordsys.ord_str_list default null),
+
+  STATIC PROCEDURE applyWatermark(imageBfile    IN OUT NOCOPY BFILE,
+                               added_text       IN VARCHAR2,
+                               dest          IN OUT NOCOPY BLOB,
+                               logging OUT VARCHAR2,
+                               watermark_properties IN ordsys.ord_str_list default null),
+
+  STATIC PROCEDURE applyWatermark(imageBfile    IN OUT NOCOPY BFILE,
+                               added_image      IN OUT NOCOPY BFILE,
+                               dest          IN OUT NOCOPY BLOB,
+                               logging OUT VARCHAR2,
+                               watermark_properties IN ordsys.ord_str_list default null)
+
+);

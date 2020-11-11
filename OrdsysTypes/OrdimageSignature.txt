@@ -1,0 +1,31 @@
+create or replace TYPE ORDImageSignature
+                                                                       authid current_user
+AS OBJECT
+(
+  -- Signature of the image.  Contains color, texture
+  -- and shape information of the image.  It is stored
+  -- in a BLOB.
+
+  signature BLOB,
+
+-----------------------
+-- METHOD DECLARATION
+
+-- Makes the callout
+
+STATIC FUNCTION init RETURN ORDImageSignature,
+
+STATIC FUNCTION evaluateScore(sig1 IN ORDImageSignature,
+                              sig2 IN ORDImageSignature,
+			      weights IN VARCHAR2)
+  RETURN FLOAT,
+
+STATIC FUNCTION isSimilar(sig1 IN ORDImageSignature,
+                          sig2 IN ORDImageSignature,
+			  weights IN VARCHAR2,
+			  threshold IN FLOAT)
+  RETURN PLS_INTEGER,
+
+MEMBER PROCEDURE generateSignature(SELF      IN OUT NOCOPY ORDImageSignature,
+				   image     IN ORDImage)
+);
