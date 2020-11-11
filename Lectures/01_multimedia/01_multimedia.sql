@@ -29,7 +29,7 @@ SELECT image INTO obj
 FROM images
 WHERE id_image = v_id_image FOR UPDATE;
 
-obj.importfrom(ctx,'file','WORK_DRECTORY',file_name);
+obj.importfrom(ctx,'file','WORK_DIRECTORY',file_name);
 
 UPDATE images
 SET image = obj 
