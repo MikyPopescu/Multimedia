@@ -88,7 +88,7 @@ namespace WindowsFormsApp1
             oracleCommand.Parameters[0].Direction = ParameterDirection.Input;
             oracleCommand.Parameters[1].Direction = ParameterDirection.Output;
 
-            oracleCommand.Parameters[0].Value = Convert.ToInt32(tbId.Text);
+            oracleCommand.Parameters[0].Value = Convert.ToInt32(tbIdAfisare.Text);
 
             try
             {
@@ -100,10 +100,35 @@ namespace WindowsFormsApp1
             }
 
             OracleBlob temp = (OracleBlob)oracleCommand.Parameters[1].Value;
+   
 
             pictureBox1.Image = Image.FromStream((System.IO.Stream)temp);
 
             oracleConnection.Close();
+        }
+
+        private void btnGenerateSignature_Click(object sender, EventArgs e)
+        {
+            //btnConnection_Click(this, null);
+            oracleConnection.Open();
+            OracleCommand oracleCommand = new OracleCommand("generate_signature_procedure", oracleConnection);
+            oracleCommand.CommandType = CommandType.StoredProcedure;
+            try
+            {
+                oracleCommand.ExecuteNonQuery();
+            }
+            catch(OracleException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            oracleConnection.Close();
+            MessageBox.Show("Successfully generated signature!");
+        }
+
+        private void btnSemanticSearch_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
