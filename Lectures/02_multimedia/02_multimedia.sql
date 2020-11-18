@@ -105,34 +105,34 @@ END;
 /
 
 --recunoastere semantica
-CREATE OR REPLACE PROCEDURE find_procedure(v_file_name IN VARCHAR2, v_color IN DECIMAL, v_texture IN DECIMAL, v_shape IN DECIMAL, v_location IN DECIMAL, id_result OUT INTEGER)
-IS
-  score NUMBER; 
-  queryImageSignature ORDImageSignature; 
-  referencedImage ORDImage; 
-  currentImage ORDImage; 
-  currentSignature ORDImageSignature; 
-  minScore NUMBER; 
-BEGIN
-  id_result:=0;
-  referencedImage:= ORDImage.init('file','WORK_DIRECTORY',v_file_name);
-  referencedImage.setProperties;
-  queryImageSignature:=ORDImageSignature.init();
-  dbms_lob.createtemporary(queryImageSignature.signature, TRUE);
-  currentSignature.generateSignature(referencedImage);
-  minScore:=100; --maximum score
-  FOR i IN (SELECT id_image FROM images)
-   LOOP
-    SELECT s.image, s.image_signature INTO  currentImage, currentSignature
-    FROM images s
-    WHERE s.id_image = i.id_image;
-    score:=ORDImageSignature.evaluateScore(queryImageSignature, currentSignature, 'color=' || v_color || ' texture=' ||  v_texture || ' shape=' || v_shape || ' location=' ||v_location || '');
-    
-    IF score<minScore THEN
-     minScore:=score;
-     id_result:=i.id_image;
-    END IF;
-  END LOOP;
-END;
-/
+--procedura pt compararea imaginilor
+create or replace procedure regasire (nfis in varchar2, cculoare in decimal, ctextura in decimal, cforma in decimal, clocatie in decimal, idrez out integer)
+is
+scor number;
+qsemn ORDImageSignature;
+--img de referinta si signatura ei
+qimg ORDimage;
+myimg ORDImage;
+mysemn ORDImageSignature;
+mymin number;
+begin
+idrez:=0;
+--img de referinta nu o sa o stocam in bd
+qimg:=ORDImage.init('file','WORK_DIRECTORY',nfis);
+qimg.setproperties;
+qsemn:=ORDImageSignature.init();
+DBMS_LOB.CREATETEMPORARY(qsemn.signature,TRUE);
+qsemn.generateSignature(qimg);
+mymin:=100;
+for x in (select id_image from IMAGES)
+loop
+select s.image, s.image_signature into myimg, mysemn from IMAGES s where s.id_image=x.id_image;
+scor:=ORDImageSignature.evaluateScore(qsemn,mysemn,'color='||cculoare||
+' texture='|| ctextura||' shape='|| cforma||' location='||clocatie||'');
+if scor<mymin then 
+    mymin:=scor;
+    idrez:=x.id_image;
+end if;
+end loop;
+end;
   
