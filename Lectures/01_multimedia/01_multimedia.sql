@@ -8,7 +8,7 @@ CREATE TABLE IMAGES (
 -- retrieve resources from disk
 
 -- create directory
-CREATE OR REPLACE DIRECTORY WORK_DIRECTORY AS 'C:\Users\Miky\Desktop\Multimedia\Lectures';
+CREATE OR REPLACE DIRECTORY WORK_DIRECTORY AS 'D:\Media';
 
 -- give privilages
 GRANT READ ON DIRECTORY WORK_DIRECTORY TO PUBLIC WITH GRANT OPTION;
