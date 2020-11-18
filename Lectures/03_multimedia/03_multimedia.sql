@@ -30,13 +30,38 @@ END;
 
 
 --video
-CREATE TABLE Video(id_video NUMBER NOT NULL, descrip VARCHAR2(40), video ORDVideo);
+CREATE TABLE Videos(id_video NUMBER NOT NULL, descrip VARCHAR2(40), video ORDVideo);
 
 DECLARE 
 obj ORDVideo;
 ctx RAW(64):=NULL;
 BEGIN
 
-INSERT INTO video VALUES (123, 'Film 1', OrdVideo.init());
+INSERT INTO Videos VALUES (123, 'Film 1', OrdVideo.init());
 
-SELECT
+SELECT video INTO obj
+FROM Videos
+WHERE id_video=123 FOR UPDATE;
+
+obj.importFrom(ctx,'file','WORK_DIRECTORY','film1.avi');
+
+UPDATE Videos
+SET video=obj
+WHERE id_video=123;
+
+COMMIT;
+END;
+/
+
+
+CREATE PROCEDURE show_video (flux OUT BLOB)
+IS
+obj ORDVideo;
+BEGIN
+ SELECT video INTO obj
+ FROM Videos
+ WHERE id_video=123;
+ 
+ flux:=obj.getContent();
+END;
+/
