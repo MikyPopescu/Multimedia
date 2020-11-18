@@ -1,0 +1,382 @@
+create or replace TYPE        ORDVideo
+                                                                       authid current_user
+AS OBJECT
+(
+---------------------------
+-- ATTRIBUTES
+---------------------------
+  description VARCHAR2(4000),
+  source      ORDSource,
+  format      VARCHAR2(31),
+  mimeType    VARCHAR2(4000),
+  comments    CLOB,
+--
+--
+---------------------------
+-- Video Related Attributes
+---------------------------
+  width             INTEGER,
+  height            INTEGER,
+  frameResolution   INTEGER,
+  frameRate         INTEGER,
+  videoDuration     INTEGER,
+  numberOfFrames    INTEGER,
+  compressionType   VARCHAR2(4000),
+  numberOfColors    INTEGER,
+  bitRate           INTEGER,
+--
+--
+  ---------------------------
+  -- METHODS
+  ---------------------------
+  -- USER-DEFINED CONSTRUCTORS
+--
+-- Description:  Construct an ORDVideo object from a BLOB
+-- Parameters:
+--   data:      BLOB
+--   setProperties: integer of value 0 or 1, determines if setProperties
+--                  method is called in the constructor.
+--
+  CONSTRUCTOR FUNCTION ORDVideo(SELF IN OUT NOCOPY ORDSYS.ORDVideo,
+    data             IN BLOB,
+    setProperties IN INTEGER DEFAULT 0
+  ) RETURN SELF AS RESULT,
+--
+--
+-- Description: Construct an ORDVideo object from a specified source.
+-- By default, an empty local ORDVideo object is created.
+-- Parameters:
+--   source_type: the type of the source.
+--                Allowed value: LOCAL(default), FILE, HTTP
+--   source_location: the location of the source.
+--   source_name: the name of the source.
+--   setProperties: integer of value 0 or 1, determines if setProperties
+--                  method is called in the constructor.
+--
+  CONSTRUCTOR FUNCTION ORDVideo(SELF IN OUT NOCOPY ORDSYS.ORDVideo,
+    source_type       IN VARCHAR2 DEFAULT 'LOCAL',
+    source_location   IN VARCHAR2 DEFAULT NULL,
+    source_name       IN VARCHAR2 DEFAULT NULL,
+    setProperties  IN INTEGER DEFAULT 0
+  ) RETURN SELF AS RESULT,
+  --
+  -- CONSTRUCTORS
+  STATIC FUNCTION init RETURN ORDVideo,
+  STATIC FUNCTION init( srcType IN VARCHAR2,
+            srcLocation IN VARCHAR2,
+            srcName IN VARCHAR2 ) RETURN ORDVideo,
+  --
+  --
+  -- DATE RELATED METHODS
+  MEMBER FUNCTION  getUpdateTime RETURN DATE,
+  PRAGMA RESTRICT_REFERENCES(getUpdateTime, WNDS, WNPS, RNDS, RNPS),
+  MEMBER PROCEDURE setUpdateTime(SELF IN OUT NOCOPY ORDVideo, current_time DATE),
+  --
+  -- TITLE RELATED METHODS
+  MEMBER PROCEDURE setDescription(SELF IN OUT NOCOPY ORDVideo, user_description IN VARCHAR2),
+  MEMBER FUNCTION  getDescription RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getDescription, WNDS, WNPS, RNDS, RNPS),
+  --
+  -- MIMETYPE RELATED METHODS
+  MEMBER FUNCTION  getMimeType RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getMimeType, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setMimeType(SELF IN OUT NOCOPY ORDVideo, mime IN VARCHAR2),
+  --
+  --
+  -- SOURCE RELATED METHODS
+  MEMBER FUNCTION  processSourceCommand(
+                            SELF      IN OUT NOCOPY ORDVideo,
+                            ctx       IN OUT RAW,
+                            cmd       IN VARCHAR2,
+                            arguments IN VARCHAR2,
+                            result    OUT RAW)
+                   RETURN RAW,
+  MEMBER FUNCTION  getSourceObject RETURN ORDSource,
+  PRAGMA RESTRICT_REFERENCES(getSourceObject, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER FUNCTION  isLocal RETURN BOOLEAN,
+  PRAGMA RESTRICT_REFERENCES(isLocal, WNDS, WNPS, RNDS, RNPS),
+  MEMBER PROCEDURE setLocal(SELF IN OUT NOCOPY ORDVideo),
+  MEMBER PROCEDURE clearLocal(SELF IN OUT NOCOPY ORDVideo),
+  MEMBER PROCEDURE setSource(SELF IN OUT NOCOPY ORDVideo,
+                             source_type     IN VARCHAR2,
+                             source_location IN VARCHAR2,
+                             source_name     IN VARCHAR2),
+  MEMBER FUNCTION  getSource RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getSource, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER FUNCTION  getSourceType RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getSourceType, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER FUNCTION  getSourceLocation RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getSourceLocation, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER FUNCTION  getSourceName RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getSourceName, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE import(SELF IN OUT NOCOPY ORDVideo,
+                          ctx IN OUT RAW),
+  MEMBER PROCEDURE importFrom(SELF IN OUT NOCOPY ORDVideo,
+                          ctx IN OUT RAW,
+                          source_type IN VARCHAR2,
+                          source_location IN VARCHAR2,
+                      source_name IN VARCHAR2),
+  MEMBER PROCEDURE export(SELF IN OUT NOCOPY ORDVideo,
+                          ctx      IN OUT RAW,
+                          source_type     IN VARCHAR2,
+                          source_location IN VARCHAR2,
+                          source_name     IN VARCHAR2),
+  MEMBER FUNCTION  getContentLength RETURN INTEGER,
+  MEMBER FUNCTION  getContentLength(ctx IN OUT RAW) RETURN INTEGER,
+  --
+  -- This method will copy data in the LOB provided, if the data is not
+  -- stored in internal LOB it will be imported and returned in the LOB
+  -- provided
+  MEMBER PROCEDURE getContentInLob(SELF IN OUT NOCOPY ORDVideo,
+                                   ctx IN OUT RAW,
+                                   dest_lob IN OUT NOCOPY BLOB,
+                                   mimeType OUT VARCHAR2,
+                                   format OUT VARCHAR2),
+  --
+  MEMBER FUNCTION  getContent RETURN BLOB,
+  PRAGMA RESTRICT_REFERENCES(getContent, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE deleteContent(SELF IN OUT NOCOPY ORDVideo),
+  --
+  --
+  -- FILE OPERATIONS on the source
+  MEMBER FUNCTION openSource(SELF IN OUT NOCOPY ORDVideo,
+                             userArg IN RAW,
+                             ctx OUT RAW)
+  RETURN INTEGER,
+  --
+  MEMBER FUNCTION closeSource(SELF IN OUT NOCOPY ORDVideo, ctx IN OUT RAW)
+  RETURN INTEGER,
+  --
+  MEMBER FUNCTION trimSource(SELF IN OUT NOCOPY ORDVideo, ctx IN OUT RAW,
+                             newlen IN INTEGER) RETURN INTEGER,
+  --
+  MEMBER PROCEDURE readFromSource(SELF IN OUT NOCOPY ORDVideo,
+                                  ctx IN OUT RAW,
+                                  startPos IN INTEGER,
+                                  numBytes IN OUT INTEGER,
+                                  buffer OUT RAW),
+  --
+  MEMBER PROCEDURE writeToSource(SELF IN OUT NOCOPY ORDVideo,
+                                 ctx IN OUT RAW,
+                                 startPos IN INTEGER,
+                                 numBytes IN OUT INTEGER,
+                                 buffer IN RAW),
+  --
+  --
+  --VIDEO ATTRIBUTES ACCESSORS
+  MEMBER PROCEDURE setFormat(SELF IN OUT NOCOPY ORDVideo,
+                             knownFormat IN VARCHAR2),
+  MEMBER FUNCTION  getFormat RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getFormat, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setFrameSize(SELF IN OUT NOCOPY ORDVideo,
+                                knownWidth IN INTEGER, knownHeight IN INTEGER),
+  MEMBER PROCEDURE getFrameSize(SELF IN OUT NOCOPY ORDVideo,
+                                retWidth OUT INTEGER, retHeight OUT INTEGER),
+  PRAGMA RESTRICT_REFERENCES(getFrameSize, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setFrameResolution(SELF IN OUT NOCOPY ORDVideo,
+                                      knownFrameResolution IN INTEGER),
+  MEMBER FUNCTION  getFrameResolution RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getFrameResolution, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setFrameRate(SELF IN OUT NOCOPY ORDVideo,
+                                knownFrameRate IN INTEGER),
+  MEMBER FUNCTION  getFrameRate RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getFrameRate, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setVideoDuration(SELF IN OUT NOCOPY ORDVideo,
+                                    knownVideoDuration IN INTEGER),
+  MEMBER FUNCTION  getVideoDuration RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getVideoDuration, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setNumberOfFrames(SELF IN OUT NOCOPY ORDVideo,
+                                     knownNumberOfFrames IN INTEGER),
+  MEMBER FUNCTION  getNumberOfFrames RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getNumberOfFrames, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setCompressionType(SELF IN OUT NOCOPY ORDVideo,
+                                      knownCompressionType IN VARCHAR2),
+  MEMBER FUNCTION  getCompressionType RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(getCompressionType, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setNumberOfColors(SELF IN OUT NOCOPY ORDVideo,
+                                     knownNumberOfColors IN INTEGER),
+  MEMBER FUNCTION  getNumberOfColors RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getNumberOfColors, WNDS, WNPS, RNDS, RNPS),
+  --
+  --
+  MEMBER PROCEDURE setBitRate(SELF IN OUT NOCOPY ORDVideo,
+                              knownBitRate IN INTEGER),
+  MEMBER FUNCTION  getBitRate RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getBitRate, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER FUNCTION getBFILE RETURN BFILE,
+  PRAGMA RESTRICT_REFERENCES(getBFILE, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER PROCEDURE setKnownAttributes( SELF IN OUT NOCOPY ORDVideo,
+                                       knownFormat IN VARCHAR2,
+                                       knownWidth IN INTEGER,
+                                       knownHeight IN INTEGER,
+                                       knownFrameResolution IN INTEGER,
+                                       knownFrameRate IN INTEGER,
+                                       knownVideoDuration IN INTEGER,
+                                       knownNumberOfFrames IN INTEGER,
+                                       knownCompressionType IN VARCHAR,
+                                       knownNumberOfColors IN INTEGER,
+                                       knownBitRate IN INTEGER),
+  --
+  --
+  -- Format processor must set all the properties
+  MEMBER PROCEDURE setProperties(SELF IN OUT NOCOPY ORDVideo,
+                                 ctx IN OUT RAW,
+                                 setComments IN BOOLEAN),
+  MEMBER FUNCTION checkProperties(SELF IN OUT NOCOPY ORDVideo, ctx IN OUT RAW)
+  RETURN BOOLEAN,
+  MEMBER FUNCTION  getAttribute(ctx IN OUT RAW,
+                                name IN VARCHAR2) RETURN VARCHAR2,
+  --
+  MEMBER PROCEDURE getAllAttributes(SELF IN OUT NOCOPY ORDVideo,
+                                    ctx IN OUT RAW,
+                                    attributes IN OUT NOCOPY CLOB),
+  --
+  -- VIDEO PROCESSING METHODS
+  MEMBER FUNCTION  processVideoCommand(
+                                 SELF      IN OUT NOCOPY ORDVideo,
+                                 ctx       IN OUT RAW,
+                                 cmd       IN VARCHAR2,
+                                 arguments IN VARCHAR2,
+                                 result    OUT RAW)
+                   RETURN RAW,
+  --
+  --
+  -- Static Methods for the relational functional interface
+  STATIC PROCEDURE export(ctx             IN OUT RAW,
+                          local_data      IN BLOB,
+                          source_type     IN VARCHAR2,
+                          source_location IN VARCHAR2,
+                          source_name     IN VARCHAR2),
+  --
+  STATIC PROCEDURE importFrom(ctx             IN OUT RAW,
+                              local_data      IN OUT BLOB,
+                              source_type     IN VARCHAR2,
+                              source_location IN VARCHAR2,
+                              source_name     IN VARCHAR2),
+  --
+  STATIC PROCEDURE importFrom(ctx             IN OUT RAW,
+                              local_data      IN OUT BLOB,
+                              source_type     IN VARCHAR2,
+                              source_location IN VARCHAR2,
+                              source_name     IN VARCHAR2,
+                              format          OUT VARCHAR2,
+                              mime_type       OUT VARCHAR2),
+  --
+  STATIC PROCEDURE getProperties(ctx            IN OUT RAW,
+                                 videoBlob      IN BLOB,
+                                 attributes     IN OUT NOCOPY CLOB,
+                                 format            IN VARCHAR2),
+  --
+  STATIC PROCEDURE getProperties(ctx              IN OUT RAW,
+                                 videoBlob        IN BLOB,
+                                 attributes       IN OUT NOCOPY CLOB,
+                                 mimeType         OUT VARCHAR2,
+                                 format           IN OUT VARCHAR2,
+                                 width            OUT INTEGER,
+                                 height           OUT INTEGER,
+                                 frameResolution  OUT INTEGER,
+                                 frameRate        OUT INTEGER,
+                                 videoDuration    OUT INTEGER,
+                                 numberOfFrames   OUT INTEGER,
+                                 compressionType  OUT VARCHAR2,
+                                 numberOfColors   OUT INTEGER,
+                                 bitRate          OUT INTEGER),
+ --
+  STATIC PROCEDURE getProperties(ctx            IN OUT RAW,
+                                 videoBfile     IN OUT NOCOPY BFILE,
+                                 attributes     IN OUT NOCOPY CLOB,
+                                 format            IN VARCHAR2),
+  --
+  STATIC PROCEDURE getProperties(ctx              IN OUT RAW,
+                                 videoBfile       IN OUT NOCOPY BFILE,
+                                 attributes       IN OUT NOCOPY CLOB,
+                                 mimeType         OUT VARCHAR2,
+                                 format           IN OUT VARCHAR2,
+                                 width            OUT INTEGER,
+                                 height           OUT INTEGER,
+                                 frameResolution  OUT INTEGER,
+                                 frameRate        OUT INTEGER,
+                                 videoDuration    OUT INTEGER,
+                                 numberOfFrames   OUT INTEGER,
+                                 compressionType  OUT VARCHAR2,
+                                 numberOfColors   OUT INTEGER,
+                                 bitRate          OUT INTEGER),
+  --
+  -- BEGIN DEPRECATION
+  --
+
+  --
+  -- These methods are deprecated in Oracle Database 9i Release 1 (9.0.1)
+  --
+  --
+  MEMBER PROCEDURE setProperties(SELF IN OUT NOCOPY ORDVideo, ctx IN OUT RAW),
+  --
+  MEMBER PROCEDURE appendToComments(SELF IN OUT NOCOPY ORDVideo,
+                                    amount IN BINARY_INTEGER,
+                                    buffer IN VARCHAR2),
+  --
+  MEMBER PROCEDURE writeToComments(SELF IN OUT NOCOPY ORDVideo,
+                                   offset IN INTEGER,
+                                   amount IN BINARY_INTEGER,
+                                   buffer IN VARCHAR2),
+  --
+  MEMBER FUNCTION readFromComments(offset IN INTEGER,
+                                   amount IN BINARY_INTEGER := 32767)
+         RETURN VARCHAR2,
+  PRAGMA RESTRICT_REFERENCES(readFromComments, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER FUNCTION locateInComments(pattern IN VARCHAR2,
+                                   offset IN INTEGER := 1,
+                                   occurence IN INTEGER := 1)
+         RETURN INTEGER,
+  --
+  MEMBER PROCEDURE trimComments(SELF IN OUT NOCOPY ORDVideo, newlen IN INTEGER),
+  --
+  MEMBER PROCEDURE eraseFromComments(SELF IN OUT NOCOPY ORDVideo,
+                                     amount IN OUT NOCOPY INTEGER,
+                                     offset IN            INTEGER := 1),
+  --
+  MEMBER PROCEDURE deleteComments(SELF IN OUT NOCOPY ORDVideo),
+  --
+  MEMBER PROCEDURE loadCommentsFromFile(SELF IN OUT NOCOPY ORDVideo,
+                                        fileobj IN BFILE,
+                                        amount IN INTEGER,
+                                        from_loc IN INTEGER := 1,
+                                        to_loc IN INTEGER := 1),
+  --
+  MEMBER PROCEDURE copyCommentsOut( SELF IN OUT NOCOPY ORDVideo,
+                                    dest IN OUT NOCOPY CLOB,
+                                    amount IN INTEGER,
+                                    from_loc IN INTEGER := 1,
+                                    to_loc IN INTEGER := 1),
+  --
+  MEMBER FUNCTION compareComments(compare_with_lob IN CLOB,
+                                  amount IN INTEGER:= 4294967295,
+                                  starting_pos_in_comment IN INTEGER := 1,
+                                  starting_pos_in_compare IN INTEGER := 1)
+         RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(compareComments, WNDS, WNPS, RNDS, RNPS),
+  --
+  MEMBER FUNCTION getCommentLength RETURN INTEGER,
+  PRAGMA RESTRICT_REFERENCES(getCommentLength, WNDS, WNPS, RNDS, RNPS)
+
+  --
+  -- END DEPRECATION
+  --
+);

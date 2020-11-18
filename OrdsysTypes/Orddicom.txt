@@ -1,0 +1,351 @@
+create or replace TYPE ORDDicom
+                                                                       AUTHID CURRENT_USER
+AS OBJECT
+(
+--
+-- Attributes
+--
+  SOP_INSTANCE_UID     VARCHAR2(128),
+  SOP_CLASS_UID        VARCHAR2(64),
+  STUDY_INSTANCE_UID   VARCHAR2(64),
+  SERIES_INSTANCE_UID  VARCHAR2(64),
+  Source               ORDDataSource,
+  Metadata             SYS.XMLType,
+  ContentLength        INTEGER,
+  Flag                 INTEGER,
+  Extension            BLOB,
+
+--
+-- Constructors
+--
+
+--
+-- Description:  Construct an ORDDicom object from a BLOB
+-- If setProperties is 0, setProperties() method won't be called.
+-- Exception:
+--
+  CONSTRUCTOR FUNCTION ORDDicom(SELF IN OUT NOCOPY ORDDICOM,
+    data             IN BLOB,
+    setProperties IN INTEGER DEFAULT 0
+  ) RETURN SELF AS RESULT,
+
+--
+-- Description: Construct an ORDDicom object from a specified source.
+-- By default, an empty local ORDDicom object is created.
+-- The Empty ORDDicom object can be used as the destination
+-- object for processCopy, writeMetadata, makeAnonymous methods.
+-- If setProperties is 0, setProperties() method won't be called.
+--
+  CONSTRUCTOR FUNCTION ORDDicom(SELF IN OUT NOCOPY ORDDICOM,
+    source_type       IN VARCHAR2 DEFAULT 'LOCAL',
+    source_location   IN VARCHAR2 DEFAULT NULL,
+    source_name       IN VARCHAR2 DEFAULT NULL,
+    setProperties  IN INTEGER DEFAULT 0
+  ) RETURN SELF AS RESULT,
+
+--
+-- Description: Construct an ORDDicom object from an ORDImage object.
+--
+  CONSTRUCTOR FUNCTION ORDDicom(SELF IN OUT NOCOPY ORDDicom,
+    data             IN ORDImage,
+    setproperties IN INTEGER DEFAULT 0
+  ) RETURN SELF AS RESULT,
+
+--
+-- Description:   Get the embedded DICOM binary data stored in the source
+-- attribute of the ORDDicom object.
+-- Return: BLOB handle or null if the DICOM data has not been imported.
+-- Exception: None.
+--
+MEMBER FUNCTION getContent RETURN BLOB DETERMINISTIC,
+
+--
+-- Description:  Get the length of the embedded DICOM binary data.
+-- Return: the length of the DICOM object.
+-- Exception: None.
+--
+MEMBER FUNCTION getContentLength RETURN INTEGER DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description: Get the source information as a URL.
+-- Return: The source information URL in the form of
+-- "source_type://source_location/source_name"
+-- Exception: None.
+--
+MEMBER FUNCTION getSourceInformation RETURN VARCHAR2 DETERMINISTIC  PARALLEL_ENABLE,
+
+--
+-- Description: Get the source type
+-- Return: VARCHAR2. The source type.
+-- Exception: None.
+--
+MEMBER FUNCTION getSourceType RETURN VARCHAR2 DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description:  Get the source location.
+-- Return: VARCHAR2. The source location.
+-- Exception: None.
+--
+MEMBER FUNCTION getSourceLocation RETURN VARCHAR2 DETERMINISTIC  PARALLEL_ENABLE,
+
+--
+-- Description:  Get the source name
+-- Return: VARCHAR2. The source name.
+-- Exception: None.
+--
+MEMBER FUNCTION getSourceName RETURN VARCHAR2 DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description:  Get the local status of the source. If the DICOM object is
+-- stored in the source BLOB, we say the object is local.
+-- Return: 0: not local
+--           1: local in the source BLOB.
+-- Exception: None.
+--
+MEMBER FUNCTION isLocal RETURN INTEGER DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description:   Import DICOM object from current source. This procedure
+-- assumes the source attributes have already been set in the ORDDicom object
+-- using setSourceInformation  or a constructor.
+-- Input:
+--  setproperties: 1: Default. All the DICOM attributes will be extracted into
+--                    the metadata  attribute of the ORDDicom object. The
+--                    attributes of the ORDDicom object are populated.
+--                 0: No DICOM attributes will be extracted from the
+--                    embedded DICOM binary data.
+-- Exception: None.
+--
+MEMBER PROCEDURE import(SELF             IN OUT NOCOPY ORDDicom,
+                        setproperties IN    INTEGER DEFAULT 1),
+
+--
+-- Description: Export embedded DICOM binary data to the specified destination.
+-- Note that data remains in the source BLOB and it is just copied out.
+-- Input:
+--    dest_type: The type of the destination. (FILE)
+--    dest_location: The destination location. (File directory object)
+--    dest_name: The name of the destination file.
+-- Exception: None
+--
+MEMBER PROCEDURE export(  SELF            IN     ORDDicom,
+                          dest_type       IN     VARCHAR2,
+                          dest_location   IN     VARCHAR2,
+                          dest_name       IN     VARCHAR2),
+
+
+--
+-- Description:   Set the attributes of the ORDDicom object. All the embedded
+-- DICOM binary data attributes are extracted into the metadata attribute of
+-- ORDDicom object. The XML metadata conforms to the default metadata schema
+-- with namespace http://xmlns.oracle.com/ord/dicom/metadata_1_0.
+-- Exception: None
+--
+MEMBER PROCEDURE setProperties (SELF IN OUT NOCOPY ORDDicom),
+
+--
+-- Description:  get DICOM metadata in XML for a given XML metadata schema.
+-- If the namespace parameter is omitted the default namespace
+-- http://xmlns.oracle.com/ord/dicom/metadata_1_0 is used. The metadata attribute
+-- of the ORDDicom object will not be affected.
+-- Input:
+--   extractOption: 'ALL': Default. Extract all attributes from the
+--     embedded DICOM binary data.
+--     'MAPPED': Extract only mapped attributes.
+--     'STANDARD': Extract only DICOM Standard attributes and mapped attributes.
+--   docName: The name  of the mapping document. The default mapping document
+--      ordcmmp.xml is loaded during installation and refers to the default
+--      metadata namespace of http://xmlns.oracle.com/ord/dicom/metadata_1_0.
+-- Return: Metadata encoded in XML (not schema-validated)
+-- Exception: None.
+--
+MEMBER FUNCTION extractMetadata (
+          extractOption IN VARCHAR2 DEFAULT 'ALL',
+          docName IN VARCHAR2 DEFAULT 'ordcmmp.xml')
+RETURN SYS.XMLTYPE,
+
+--
+-- Description: Get a DICOM attribute as String.
+-- Input:
+--   tag: specifies attribute/item tag in hexadecimal string.
+--        For attributes of sequence type (SQ), one may access its child with
+--        "." notation.   For example: "00082218.00080100" gives the code
+--        value (tag "00080100") of anatomic region sequence (tag "00082218").
+--        "00080005[2]" gives the second item value of the specific character
+--        set attribute (tag "00080005").
+--   definerName: The name of the tag definer.
+-- Return: If the setProperties method has been called, return the attribute
+--         value cast to VARCHAR2.
+-- Exception:        None.
+--
+MEMBER FUNCTION getAttributeByTag (tag IN VARCHAR2,
+                                   definerName IN VARCHAR2 DEFAULT 'DICOM')
+RETURN VARCHAR2 DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description: Get a DICOM attribute as String.
+-- Input: attributeName, specifies attribute/item name.
+--   definerName: The name of the attribute definer.
+-- Return: If the setProperties method has been called, return the attribute
+--         value cast to VARCHAR2.
+-- Exception:        None.
+--
+MEMBER FUNCTION getAttributeByName (attributeName IN VARCHAR2,
+                                    definerName   IN VARCHAR2 DEFAULT 'DICOM')
+RETURN VARCHAR2 DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description:    Get the SOP_INSTANCE_UID attribute.
+-- Return: VARCHAR2. The SOP Instance UID in VARCHAR2.
+-- Exception: None.
+--
+MEMBER FUNCTION getSOPInstanceUID RETURN VARCHAR2 DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description:  Get the STUDY_INSTANCE_UID attribute.
+-- Return: VARCHAR2. The study instance UID in VARCHAR2.
+-- Exception: None.
+--
+MEMBER FUNCTION getStudyInstanceUID RETURN VARCHAR2 DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description:  Get the SERIES_INSTANCE_UID attribute.
+-- Return: VARCHAR2. The series instance UID in VARCHAR2.
+-- Exception: None.
+--
+MEMBER FUNCTION getSeriesInstanceUID RETURN VARCHAR2 DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description:  Get the SOP_CLASS_UID attribute.
+-- Return: VARCHAR2. The SOP Class UID in VARCHAR2.
+-- Exception: None.
+--
+MEMBER FUNCTION getSOPClassUID RETURN VARCHAR2 DETERMINISTIC PARALLEL_ENABLE,
+
+--
+-- Description: Modify the current ORDDICOM object with the provided metadata
+-- by making a copy of the existing ORDDicom object and creating a new
+-- ORDDicom object. The original ORDDicom object is not changed. The attributes
+-- in the embedded DICOM binary data of the destination ORDDicom object will be
+-- from the input metadata.
+-- Input:
+--   metadata: The input metadata in XMLTYPE. It should have all the standard
+--     attributes and private attributes.  The  SOP instance UID in the
+--     metadata must ensure the global uniqueness for the destination ORDDicom
+--     object.
+--   dest: An empty ORDDicom object in which to store the new embedded
+--     DICOM binary data with the new metadata.
+-- Exception: None.
+--
+MEMBER PROCEDURE writeMetadata (SELF   IN ORDDicom,
+                                metadata IN SYS.XMLTYPE,
+                                dest IN OUT NOCOPY ORDDicom),
+
+--
+-- Description:    Copy the input ORDDicom image object into the destination
+-- ORDImage object and perform the specified processing operations on the
+-- destination ORDImage object.  The input ORDDicom image is not changed.
+-- Input:
+--   command: The command can have following verbs: frameNumber, contentformat,
+--     fileformat, compressionformat, cut, scale, rotate, etc.
+--     Refer to "Oracle Multimedia Reference Guide" process command for
+--     details on each verb.
+--   dest: The image without DICOM metadata in ORDIMAGE type.
+-- Exception: None.
+--
+MEMBER PROCEDURE processCopy (SELF   IN ORDDicom,
+                              command IN VARCHAR2,
+                              dest IN OUT NOCOPY ORDImage),
+
+--
+-- Description:  Copy the input ORDDicom image object into a destination
+-- ORDDicom Image object and perform the specified processing operations on
+-- the destination ORDDicom image object. The DICOM attributes of the
+-- destination DICOM binary data are only updated with image information.
+-- The input ORDDicom object is not changed.
+-- Input:
+--   command: The command can have following verbs: compressionformat,
+--     frameNumber, contentformat, cut, scale, rotate, etc. Refer to
+--     "Oracle Multimedia Reference Guide" process command for details on each
+--     verb.
+--   dest_SOP_INSTANCE_UID: The SOP instance UID of the destination ORDDicom
+--     object. It must ensure the global uniqueness for the destination
+--     ORDDicom object.
+--   dest: An empty ORDDicom object to store the new DICOM Image with
+--     the new metadata.
+--   Metadata: The new metadata to be written into the new DICOM image.
+-- Exception: None.
+--
+MEMBER PROCEDURE processCopy (SELF   IN ORDDicom,
+                              command IN VARCHAR2,
+                              dest_SOP_INSTANCE_UID IN VARCHAR2,
+                              dest IN OUT NOCOPY ORDDicom,
+                              metadata IN SYS.XMLTYPE DEFAULT NULL),
+
+--
+-- Description:    Copy the input ORDDicom object into the destination BLOB
+-- and perform the specified processing operations on the destination  BLOB.
+-- The input ORDDicom object is not changed.
+-- Input:
+--   command: The command can have following verbs: frameNumber, contentformat,
+--     fileformat, compressionformat, cut, scale, rotate, etc. Refer to
+--     "Oracle Multimedia Reference Guide" process command for details on each
+--     verb.
+--   dest: the destination BLOB contains the output of the process command
+--     on the ORDDicom object.
+-- Exception: None.
+--
+MEMBER PROCEDURE processCopy (SELF   IN ORDDicom,
+                              command IN VARCHAR2,
+                              dest IN OUT NOCOPY BLOB),
+
+--
+-- Description:    Make the DICOM binary data anonymous after copying it into
+-- another ORDDicom object based on the given anonymity definition document
+-- name. Note that both the embedded DICOM binary data and the metadata
+-- attribute in the destination ORDDicom object are made anonymous.
+-- Input:
+--   dest_SOP_INSTANCE_UID: The SOP instance UID of the destination ORDDicom
+--                          object. It must ensure the global uniqueness
+--                          for the destination ORDDicom object.
+--   dest: The anonymous ORDDicom image.
+--   anonymityDocName: the name of the anonymity definition document.
+-- Exception: None.
+--
+MEMBER PROCEDURE makeAnonymous (SELF   IN ORDDicom,
+                            dest_SOP_INSTANCE_UID IN VARCHAR2,
+                            dest IN OUT NOCOPY ORDDicom,
+                            anonymityDocName IN VARCHAR2
+                                    DEFAULT 'ordcman.xml'),
+
+--
+-- Description:    This method checks if the embedded DICOM binary data is
+-- anonymous using the given anonymity definition document stored in the
+-- repository.
+-- Input:
+--   anonymityDocName: the name of the anonymity definition document.
+-- Return: 0: not anonymous,
+--             1: anonymous.
+-- Exception: None.
+--
+MEMBER FUNCTION isAnonymous(
+  anonymityDocName IN VARCHAR2 DEFAULT 'ordcman.xml')
+RETURN INTEGER,
+
+--
+-- Description:    Checks if the embedded DICOM binary data is valid against a
+-- certain set of conformance constraints identified by the input
+-- constraintName.  This method performs the conformance
+-- validation check and returns a 1 or 0 for conformance valid or conformance
+-- invalid respectively.  It does not return the any errors raised during
+-- conformance checking in case of a conformance failure.
+-- Input:   constraintName: The name of the constraint.
+-- Return: 0: not valid,
+--         1: valid.
+-- Exception: None.
+--
+MEMBER FUNCTION isConformanceValid(
+   constraintName IN VARCHAR2
+) RETURN INTEGER
+
+) NOT FINAL;
