@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.tbIdAfisareCaine = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
@@ -46,7 +47,26 @@
             this.tbExportId = new System.Windows.Forms.TextBox();
             this.label13 = new System.Windows.Forms.Label();
             this.btnExportCaine = new System.Windows.Forms.Button();
+            this.btnGenerareSemnaturi = new System.Windows.Forms.Button();
+            this.tbCoefForma = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbCoefTextura = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.tbCoefCuloare = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.tbFisierCautat = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.tbCoefLocatie = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.tbAfisareRecunoastereSemantica = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.btnRecunoastereSemantica = new System.Windows.Forms.Button();
+            this.axWindowsMediaPlayer1 = new AxWMPLib.AxWindowsMediaPlayer();
+            this.btnVideo = new System.Windows.Forms.Button();
+            this.tbIdVideo = new System.Windows.Forms.TextBox();
+            this.label14 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.axWindowsMediaPlayer1)).BeginInit();
             this.SuspendLayout();
             // 
             // tbIdAfisareCaine
@@ -200,11 +220,181 @@
             this.btnExportCaine.UseVisualStyleBackColor = true;
             this.btnExportCaine.Click += new System.EventHandler(this.btnExportCaine_Click);
             // 
+            // btnGenerareSemnaturi
+            // 
+            this.btnGenerareSemnaturi.Location = new System.Drawing.Point(43, 346);
+            this.btnGenerareSemnaturi.Name = "btnGenerareSemnaturi";
+            this.btnGenerareSemnaturi.Size = new System.Drawing.Size(144, 46);
+            this.btnGenerareSemnaturi.TabIndex = 43;
+            this.btnGenerareSemnaturi.Text = "Generare Semnaturi";
+            this.btnGenerareSemnaturi.UseVisualStyleBackColor = true;
+            this.btnGenerareSemnaturi.Click += new System.EventHandler(this.btnGenerareSemnaturi_Click);
+            // 
+            // tbCoefForma
+            // 
+            this.tbCoefForma.Location = new System.Drawing.Point(405, 467);
+            this.tbCoefForma.Name = "tbCoefForma";
+            this.tbCoefForma.Size = new System.Drawing.Size(191, 20);
+            this.tbCoefForma.TabIndex = 51;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(326, 470);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(64, 13);
+            this.label5.TabIndex = 50;
+            this.label5.Text = "Coef. forma:";
+            // 
+            // tbCoefTextura
+            // 
+            this.tbCoefTextura.Location = new System.Drawing.Point(405, 423);
+            this.tbCoefTextura.Name = "tbCoefTextura";
+            this.tbCoefTextura.Size = new System.Drawing.Size(191, 20);
+            this.tbCoefTextura.TabIndex = 49;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(328, 426);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(70, 13);
+            this.label6.TabIndex = 48;
+            this.label6.Text = "Coef. textura:";
+            // 
+            // tbCoefCuloare
+            // 
+            this.tbCoefCuloare.Location = new System.Drawing.Point(405, 384);
+            this.tbCoefCuloare.Name = "tbCoefCuloare";
+            this.tbCoefCuloare.Size = new System.Drawing.Size(191, 20);
+            this.tbCoefCuloare.TabIndex = 47;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(326, 387);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(73, 13);
+            this.label7.TabIndex = 46;
+            this.label7.Text = "Coef. culoare:";
+            // 
+            // tbFisierCautat
+            // 
+            this.tbFisierCautat.Location = new System.Drawing.Point(405, 346);
+            this.tbFisierCautat.Name = "tbFisierCautat";
+            this.tbFisierCautat.Size = new System.Drawing.Size(191, 20);
+            this.tbFisierCautat.TabIndex = 45;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(332, 349);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(67, 13);
+            this.label8.TabIndex = 44;
+            this.label8.Text = "Fisier cautat:";
+            // 
+            // tbCoefLocatie
+            // 
+            this.tbCoefLocatie.Location = new System.Drawing.Point(405, 510);
+            this.tbCoefLocatie.Name = "tbCoefLocatie";
+            this.tbCoefLocatie.Size = new System.Drawing.Size(191, 20);
+            this.tbCoefLocatie.TabIndex = 53;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(326, 513);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(69, 13);
+            this.label9.TabIndex = 52;
+            this.label9.Text = "Coef. locatie:";
+            // 
+            // tbAfisareRecunoastereSemantica
+            // 
+            this.tbAfisareRecunoastereSemantica.BackColor = System.Drawing.Color.YellowGreen;
+            this.tbAfisareRecunoastereSemantica.Location = new System.Drawing.Point(404, 552);
+            this.tbAfisareRecunoastereSemantica.Name = "tbAfisareRecunoastereSemantica";
+            this.tbAfisareRecunoastereSemantica.Size = new System.Drawing.Size(100, 20);
+            this.tbAfisareRecunoastereSemantica.TabIndex = 55;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(326, 555);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(64, 13);
+            this.label10.TabIndex = 54;
+            this.label10.Text = "ID de afisat:";
+            // 
+            // btnRecunoastereSemantica
+            // 
+            this.btnRecunoastereSemantica.Location = new System.Drawing.Point(521, 552);
+            this.btnRecunoastereSemantica.Name = "btnRecunoastereSemantica";
+            this.btnRecunoastereSemantica.Size = new System.Drawing.Size(75, 23);
+            this.btnRecunoastereSemantica.TabIndex = 56;
+            this.btnRecunoastereSemantica.Text = "Regasire";
+            this.btnRecunoastereSemantica.UseVisualStyleBackColor = true;
+            this.btnRecunoastereSemantica.Click += new System.EventHandler(this.btnRecunoastereSemantica_Click);
+            // 
+            // axWindowsMediaPlayer1
+            // 
+            this.axWindowsMediaPlayer1.Enabled = true;
+            this.axWindowsMediaPlayer1.Location = new System.Drawing.Point(22, 610);
+            this.axWindowsMediaPlayer1.Name = "axWindowsMediaPlayer1";
+            this.axWindowsMediaPlayer1.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("axWindowsMediaPlayer1.OcxState")));
+            this.axWindowsMediaPlayer1.Size = new System.Drawing.Size(413, 265);
+            this.axWindowsMediaPlayer1.TabIndex = 57;
+            // 
+            // btnVideo
+            // 
+            this.btnVideo.Location = new System.Drawing.Point(574, 674);
+            this.btnVideo.Name = "btnVideo";
+            this.btnVideo.Size = new System.Drawing.Size(75, 23);
+            this.btnVideo.TabIndex = 58;
+            this.btnVideo.Text = "Video";
+            this.btnVideo.UseVisualStyleBackColor = true;
+            this.btnVideo.Click += new System.EventHandler(this.btnVideo_Click);
+            // 
+            // tbIdVideo
+            // 
+            this.tbIdVideo.Location = new System.Drawing.Point(549, 634);
+            this.tbIdVideo.Name = "tbIdVideo";
+            this.tbIdVideo.Size = new System.Drawing.Size(100, 20);
+            this.tbIdVideo.TabIndex = 60;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(476, 637);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(51, 13);
+            this.label14.TabIndex = 59;
+            this.label14.Text = "ID Video:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1109, 625);
+            this.ClientSize = new System.Drawing.Size(1078, 896);
+            this.Controls.Add(this.tbIdVideo);
+            this.Controls.Add(this.label14);
+            this.Controls.Add(this.btnVideo);
+            this.Controls.Add(this.axWindowsMediaPlayer1);
+            this.Controls.Add(this.btnRecunoastereSemantica);
+            this.Controls.Add(this.tbAfisareRecunoastereSemantica);
+            this.Controls.Add(this.label10);
+            this.Controls.Add(this.tbCoefLocatie);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.tbCoefForma);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.tbCoefTextura);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.tbCoefCuloare);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.tbFisierCautat);
+            this.Controls.Add(this.label8);
+            this.Controls.Add(this.btnGenerareSemnaturi);
             this.Controls.Add(this.btnExportCaine);
             this.Controls.Add(this.tbExportFisier);
             this.Controls.Add(this.label12);
@@ -226,6 +416,7 @@
             this.Name = "Form1";
             this.Text = " ";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.axWindowsMediaPlayer1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -250,6 +441,24 @@
         private System.Windows.Forms.TextBox tbExportId;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Button btnExportCaine;
+        private System.Windows.Forms.Button btnGenerareSemnaturi;
+        private System.Windows.Forms.TextBox tbCoefForma;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbCoefTextura;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox tbCoefCuloare;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox tbFisierCautat;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox tbCoefLocatie;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox tbAfisareRecunoastereSemantica;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Button btnRecunoastereSemantica;
+        private AxWMPLib.AxWindowsMediaPlayer axWindowsMediaPlayer1;
+        private System.Windows.Forms.Button btnVideo;
+        private System.Windows.Forms.TextBox tbIdVideo;
+        private System.Windows.Forms.Label label14;
     }
 }
 

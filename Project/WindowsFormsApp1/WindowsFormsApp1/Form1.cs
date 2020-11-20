@@ -144,5 +144,122 @@ namespace WindowsFormsApp1
 
             oracleConnection.Close();
         }
+
+        //Faza2
+        //generare semnaturi
+        private void btnGenerareSemnaturi_Click(object sender, EventArgs e)
+        {
+            btnConnection_Click(this, null);
+            oracleConnection.Open();
+            OracleCommand oracleCommand = new OracleCommand("PROCEDURA_GENERARE_SEMNATURI", oracleConnection);
+            oracleCommand.CommandType = CommandType.StoredProcedure;
+            try
+            {
+                oracleCommand.ExecuteNonQuery();
+            }
+            catch (OracleException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            oracleConnection.Close();
+            MessageBox.Show("Semnatura generata cu succes!");
+        }
+        //recunoastere semnatica (regasire)
+        private void btnRecunoastereSemantica_Click(object sender, EventArgs e)
+        {
+            btnConnection_Click(this, null);
+            try
+            {
+                oracleConnection.Open();
+            }
+            catch (OracleException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            OracleCommand cmd = new OracleCommand("regasire", oracleConnection);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add("nfis", OracleDbType.Varchar2);
+            cmd.Parameters.Add("cculoare", OracleDbType.Decimal);
+            cmd.Parameters.Add("ctextura", OracleDbType.Decimal);
+            cmd.Parameters.Add("cforma", OracleDbType.Decimal);
+            cmd.Parameters.Add("clocatie", OracleDbType.Decimal);
+            cmd.Parameters.Add("idrez", OracleDbType.Int32);
+
+
+            for (int i = 0; i < 5; i++)
+            {
+                cmd.Parameters[i].Direction = ParameterDirection.Input;
+            }
+
+            cmd.Parameters[5].Direction = ParameterDirection.Output;
+            cmd.Parameters[0].Value = tbFisierCautat.Text;
+            cmd.Parameters[1].Value = Convert.ToDecimal(tbCoefCuloare.Text);
+            cmd.Parameters[2].Value = Convert.ToDecimal(tbCoefTextura.Text);
+            cmd.Parameters[3].Value = Convert.ToDecimal(tbCoefForma.Text);
+            cmd.Parameters[4].Value = Convert.ToDecimal(tbCoefLocatie.Text);
+            try
+            {
+                cmd.ExecuteScalar();
+            }
+            catch (OracleException ex)
+            {
+                MessageBox.Show(ex.Message);
+
+            }
+            tbAfisareRecunoastereSemantica.Text = cmd.Parameters[5].Value.ToString();
+            oracleConnection.Close();
+
+        }
+
+        //Faza3
+        //video
+        private void btnVideo_Click(object sender, EventArgs e)
+        {
+            this.btnConnection_Click(sender, e);
+
+            try
+            {
+                oracleConnection.Open();
+            }
+            catch (OracleException ex)
+            {
+                MessageBox.Show(ex.Message);
+            } 
+
+            OracleCommand oracleCommand = new OracleCommand("PROCEDURA_AFISARE_VIDEO", oracleConnection);
+            oracleCommand.CommandType = CommandType.StoredProcedure;
+            oracleCommand.Parameters.Add("v_id", OracleDbType.Int32);
+            oracleCommand.Parameters.Add("flux", OracleDbType.Blob);
+            oracleCommand.Parameters[0].Direction = ParameterDirection.Input;
+            oracleCommand.Parameters[1].Direction = ParameterDirection.Output;
+            oracleCommand.Parameters[0].Value = Convert.ToInt32(tbIdVideo.Text);
+            try
+            {
+                oracleCommand.ExecuteScalar();
+            }
+            catch (OracleException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            Byte[] blob = new Byte[((OracleBlob)oracleCommand.Parameters[1].Value).Length];
+            FileStream fileStream = null;
+            try
+            {
+                ((OracleBlob)oracleCommand.Parameters[1].Value).Read(blob, 0, blob.Length);
+            }
+            catch(InvalidCastException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            fileStream = new FileStream("d:\\fisier.avi", FileMode.Create, FileAccess.ReadWrite);
+            fileStream.Write(blob, 0, blob.Length);
+            fileStream.Close();
+            oracleConnection.Close();
+
+            axWindowsMediaPlayer1.URL = "d:\\fisier.avi";
+            axWindowsMediaPlayer1.Ctlcontrols.play();
+        }
     }
 }
